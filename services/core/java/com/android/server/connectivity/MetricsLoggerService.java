@@ -56,6 +56,8 @@ public class MetricsLoggerService extends SystemService {
             if (DBG) Log.d(TAG, "onBootPhase: PHASE_SYSTEM_SERVICES_READY");
             publishBinderService(ConnectivityMetricsLogger.CONNECTIVITY_METRICS_LOGGER_SERVICE,
                     mBinder);
+            mNetdListener = new NetdEventListenerService(getContext());
+            publishBinderService(mNetdListener.SERVICE_NAME, mNetdListener);
         }
     }
 
@@ -83,6 +85,8 @@ public class MetricsLoggerService extends SystemService {
     private long mThrottlingIntervalBoundaryMillis;
 
     private final ArrayDeque<ConnectivityMetricsEvent> mEvents = new ArrayDeque<>();
+
+    private NetdEventListenerService mNetdListener;
 
     private void enforceConnectivityInternalPermission() {
         getContext().enforceCallingOrSelfPermission(
@@ -215,6 +219,9 @@ public class MetricsLoggerService extends SystemService {
                     }
                 }
             }
+
+            pw.println();
+            mNetdListener.dump(pw);
         }
 
         public long logEvent(ConnectivityMetricsEvent event) {
